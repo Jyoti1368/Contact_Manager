@@ -3,6 +3,7 @@ const errorHandler = require('./middleware/errorHandler');
 const dotenv = require('dotenv');
 
 const contactRoutes = require('./routes/contactRoutes');
+const UserRoutes = require('./routes/userRoutes')
 const connectDb = require('./Mongo/dil');
 
 dotenv.config();
@@ -17,6 +18,7 @@ connectDb();
 
 app.use(express.json());
 app.use('/api/contacts', contactRoutes);
+app.use('/api/users',UserRoutes )
 app.use(errorHandler);
 
 app.listen(port, () => {
