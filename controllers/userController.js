@@ -1,6 +1,7 @@
 const expressAsyncHandler = require("express-async-handler");
 const bcrypt = require('bcrypt');
 const UserModel = require('../models/UserModel');
+const jwt = require('jsonwebtoken');
 
 const register = expressAsyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
@@ -35,7 +36,35 @@ const register = expressAsyncHandler(async (req, res) => {
 });
 
 const login = expressAsyncHandler(async (req, res) => {
-  res.json({ message: "Login User" });
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error('All fields are mandatory');
+  }
+
+  const user = await UserModel.findOne({ email });
+
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const accessToken = jwt.sign(
+      {
+        user: {
+          username: user.username,
+          email: user.email,
+          id: user._id, // Use _id for MongoDB ObjectId
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1m",
+      }
+    );
+
+    res.status(200).json({ accessToken });
+  } else {
+    res.status(401);
+    throw new Error("Invalid email or password");
+  }
 });
 
 const current = expressAsyncHandler(async (req, res) => {
